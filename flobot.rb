@@ -1,10 +1,7 @@
 $: << File.dirname(__FILE__)
 
 require 'cinch'
-require 'trello'
-require 'state_machine'
-require 'lib/trello_client'
-require 'lib/task'
+require 'lib/service_client'
 
 bot = Cinch::Bot.new do
   configure do |c|
@@ -14,9 +11,18 @@ bot = Cinch::Bot.new do
   end
 
   on :message, /^(\w+) (\d+)/ do |m, action, number|
-    task = TrelloClient.task(number)
-    task.send "do_#{action}".to_sym
-    m.reply "Moved task \"#{task.card.name}\" to \"#{task.card.list.name}\""
+    m.reply "Getting task #{number}"
+    task = ServiceClient.task(number)
+    m.reply "#{action.capitalize}ifying task #{number}"
+    if task.state.to_s == action.to_s
+      m.reply "\"#{task.name}\" already in \"#{task.location}\" - nothing to do"
+    else
+      task.send "do_#{action}".to_sym
+      m.reply "Moved \"#{task.name}\" to \"#{task.location}\""
+    end
+    #task.comments.each do |comment|
+    #  m.reply comment['body']
+    #end
   end
 end
 

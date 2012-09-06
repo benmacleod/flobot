@@ -1,9 +1,15 @@
+require 'state_machine'
+
 class Task
-  attr_reader :card, :board
-  def initialize(card)
+  extend Forwardable
+  def_delegators :@card, :name, :list, :list=, :board, :location
+  def_delegators :@issue, :comments
+
+  def initialize(number, card, issue)
+    @number = number
     @card = card
-    @board = card.board
-    @state = Task.state_from card
+    @issue = issue
+    @state = card.list.name.split(/\s/).last.downcase.to_sym
   end
 
   state_machine :state do
@@ -14,13 +20,8 @@ class Task
     end
 
     after_transition any => any do |task, transition|
-      task.card.list = task.board.lists.detect{|list| list.name =~ /#{transition.to}/i}
+      task.list = task.board.lists.detect{|list| list.name =~ /#{transition.to}/i}
     end
   end
-
-  def self.state_from card
-    card.list.name.split(/\s/).last.downcase.to_sym
-  end
-
 
 end
