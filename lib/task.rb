@@ -5,11 +5,13 @@ class Task
   def_delegators :@card, :name, :list, :list=, :board, :location
   def_delegators :@issue, :comments
 
-  def initialize(number, card, issue)
+  def initialize(number, options = {})
     @number = number
-    @card = card
-    @issue = issue
-    @state = card.list.name.split(/\s/).last.downcase.to_sym
+    options.assert_valid_keys :card, :issue, :ticket
+    options.each do |k, v|
+      instance_variable_set "@#{k}", v
+    end
+    @state = @card.list.name.split(/\s/).last.downcase.to_sym if @card
   end
 
   state_machine :state do
